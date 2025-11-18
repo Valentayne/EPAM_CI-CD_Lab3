@@ -20,10 +20,10 @@ pipeline {
     stages {
 
         stage('Checkout') {
-                    steps {
-                        git 'https://github.com/Valentayne/EPAM_CI-CD_Lab3.git'
-                    }
-                }
+            steps {
+                git 'https://github.com/Valentayne/EPAM_CI-CD_Lab3.git'
+            }
+        }
 
         stage('Build Application') {
             steps {
@@ -38,9 +38,8 @@ pipeline {
                 sh 'chmod +x ./public/scripts/test.sh'
                 sh './public/scripts/test.sh'
             }
-        }    sh 'npm test'
-            }
-        }
+        }    
+        
         
         stage('Build Docker Image') {
             steps {
