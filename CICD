@@ -8,11 +8,12 @@ pipeline {
 
     environment {
         APP_IMAGE_NAME  = 'epam-lab3'
-
-        if (branch == 'main' || branch == 'origin/main') {
-            APP_PORT = '3000'
-        } else if (branch == 'dev' || branch == 'origin/dev') {
-            APP_PORT = '3001' 
+        
+        if (env.BRANCH_NAME == "main") {
+            PORT = 3000
+        } else if (env.BRANCH_NAME == "dev") {
+            PORT = 3001
+        }
     }
 
     stages {
