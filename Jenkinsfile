@@ -1,9 +1,9 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:7.8.0'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
+
+    agent any
+
+    tools {
+        nodejs 'node'
     }
 
     environment {
@@ -11,6 +11,7 @@ pipeline {
     }
 
     stages {
+
         stage('Set ENV') {
             steps {
                 script {
@@ -18,6 +19,13 @@ pipeline {
                     env.IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain' : 'nodedev'
                     env.CONTAINER_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain-app' : 'nodedev-app'
                 }
+            }
+        }
+
+        stage('Verify Docker') {
+            steps {
+                sh 'docker --version'
+                sh 'docker ps'
             }
         }
 
@@ -39,7 +47,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${env.IMAGE_NAME}:${IMAGE_TAG}")
+                    sh "docker build -t ${env.IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -53,12 +61,13 @@ pipeline {
                     sh """
                         docker run -d \
                           --name ${env.CONTAINER_NAME} \
-                          -p ${env.APP_PORT}:${env.APP_PORT} \
+                          -p ${env.APP_PORT}:3000 \
                           --restart unless-stopped \
                           ${env.IMAGE_NAME}:${IMAGE_TAG}
                     """
 
                     sh "docker ps | grep ${env.CONTAINER_NAME}"
+                    sh "docker logs --tail=50 ${env.CONTAINER_NAME}"
                 }
             }
         }
@@ -68,6 +77,7 @@ pipeline {
         success {
             echo "Deploy complete! App is ready on port: ${env.APP_PORT}"
             echo "Image: ${env.IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Container: ${env.CONTAINER_NAME}"
         }
         failure {
             echo "Pipeline finished with error"
