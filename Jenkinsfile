@@ -15,19 +15,13 @@ pipeline {
         stage('Set ENV') {
             steps {
                 script {
-                    APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
-                    IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain' : 'nodedev'
-                    CONTAINER_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain-app' : 'nodedev-app'
+                    env.APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
+                    env.IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain' : 'nodedev'
+                    env.CONTAINER_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain-app' : 'nodedev-app'
                 }
             }
         }
-
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/Valentayne/EPAM_CI-CD_Lab3.git'
-            }
-        }
-
+        
         stage('Build Application') {
             steps {
                 sh 'chmod +x ./public/scripts/build.sh'
@@ -43,11 +37,10 @@ pipeline {
             }
         }    
         
-        
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker build -t ${env.IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -55,20 +48,20 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    sh "docker stop ${CONTAINER_NAME} || true"
-                    sh "docker rm ${CONTAINER_NAME} || true"
+                    sh "docker stop ${env.CONTAINER_NAME} || true"
+                    sh "docker rm ${env.CONTAINER_NAME} || true"
 
                     sh """
                         docker run -d \
-                          --name ${CONTAINER_NAME} \
-                          --expose ${APP_PORT} \
-                          -p ${APP_PORT}:${APP_PORT} \
+                          --name ${env.CONTAINER_NAME} \
+                          --expose ${env.APP_PORT} \
+                          -p ${env.APP_PORT}:${env.APP_PORT} \
                           --restart unless-stopped \
-                          ${IMAGE_NAME}:${IMAGE_TAG}
+                          ${env.IMAGE_NAME}:${IMAGE_TAG}
                     """
 
-                    sh "docker ps | grep ${CONTAINER_NAME}"
-                    sh "docker logs --tail=50 ${CONTAINER_NAME}"
+                    sh "docker ps | grep ${env.CONTAINER_NAME}"
+                    sh "docker logs --tail=50 ${env.CONTAINER_NAME}"
                 }
             }
         }
@@ -76,14 +69,14 @@ pipeline {
 
     post {
         success {
-            echo "Deploy complete! App is ready on port: ${APP_PORT}"
-            echo "Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Deploy complete! App is ready on port: ${env.APP_PORT}"
+            echo "Image: ${env.IMAGE_NAME}:${IMAGE_TAG}"
         }
         failure {
             echo "Pipeline finished with error"
         }
         always {
-            sh "docker rm -f ${CONTAINER_NAME}-temp || true"
+            sh "docker rm -f ${env.CONTAINER_NAME}-temp || true"
         }
     }
 }
