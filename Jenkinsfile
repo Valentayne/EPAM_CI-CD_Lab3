@@ -1,10 +1,6 @@
 pipeline {
 
-    agent {
-        node {
-            label 'nodejs-agent'
-        }
-    }
+    agent any
 
     tools {
         nodejs 'node'
