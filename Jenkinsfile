@@ -7,17 +7,24 @@ pipeline {
     }
 
     tools {
-        nodejs 'Node 7.8.0'
+        nodejs 'node'
     }
 
     environment {
-        APP_PORT = env.BRANCH_NAME == 'main' ? '3000' : '3001'
-        IMAGE_NAME = env.BRANCH_NAME == 'main' ? 'nodemain' : 'nodedev'
-        IMAGE_TAG = 'v1.0'
-        CONTAINER_NAME = env.BRANCH_NAME == 'main' ? 'nodemain-app' : 'nodedev-app'
+        IMAGE_TAG = "v1.0"
     }
 
     stages {
+
+        stage('Set ENV') {
+            steps {
+                script {
+                    APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
+                    IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain' : 'nodedev'
+                    CONTAINER_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain-app' : 'nodedev-app'
+                }
+            }
+        }
 
         stage('Checkout') {
             steps {
