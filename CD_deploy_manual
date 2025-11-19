@@ -1,18 +1,13 @@
 pipeline {
 
-    agent {
-        node {
-            label 'nodejs-agent'
-        }
+    agent any
+
+    tools {
+        nodejs 'node'
     }
 
     environment {
-        APP_IMAGE_NAME  = 'epam-lab3'
-        if (env.BRANCH_NAME == "main") {
-            PORT = 3000
-        } else if (env.BRANCH_NAME == "dev") {
-            PORT = 3001
-        }
+        IMAGE_TAG = "v1.0"
     }
 
     stages {
@@ -23,25 +18,20 @@ pipeline {
             }
         }
 
-        stage('Build Application') {
+        stage('Set ENV') {
             steps {
-                sh 'chmod +x ./public/scripts/build.sh'
-                sh './public/scripts/build.sh'
-                sh 'npm run build'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'chmod +x ./public/scripts/test.sh'
-                sh './public/scripts/test.sh'
+                script {
+                    env.APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
+                    env.IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain' : 'nodedev'
+                    env.CONTAINER_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain-app' : 'nodedev-app'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${APP_IMAGE_NAME}:latest", ".")
+                    sh "docker build -t ${env.IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -49,19 +39,19 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    sh "docker stop ${APP_IMAGE_NAME}-app || true"
-                    sh "docker rm ${APP_IMAGE_NAME}-app || true"
-                    
+                    sh "docker stop ${env.CONTAINER_NAME} || true"
+                    sh "docker rm ${env.CONTAINER_NAME} || true"
+
                     sh """
                         docker run -d \
-                          --name ${APP_IMAGE_NAME}-app \
-                          -p ${APP_PORT}:${APP_PORT} \
+                          --name ${env.CONTAINER_NAME} \
+                          -p ${env.APP_PORT}:3000 \
                           --restart unless-stopped \
-                          ${APP_IMAGE_NAME}:latest
+                          ${env.IMAGE_NAME}:${IMAGE_TAG}
                     """
-                
-                    sh "docker ps | grep ${APP_IMAGE_NAME}-app"
-                    sh "docker logs --tail=50 ${APP_IMAGE_NAME}-app"
+
+                    sh "docker ps | grep ${env.CONTAINER_NAME}"
+                    sh "docker logs --tail=50 ${env.CONTAINER_NAME}"
                 }
             }
         }
@@ -69,10 +59,15 @@ pipeline {
 
     post {
         success {
-            echo "Deploy complete! App is ready on port: ${APP_PORT}"
+            echo "Deploy complete! App is ready on port: ${env.APP_PORT}"
+            echo "Image: ${env.IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Container: ${env.CONTAINER_NAME}"
         }
         failure {
             echo "Pipeline finished with error"
+        }
+        always {
+            sh "docker rm -f ${env.CONTAINER_NAME}-temp || true"
         }
     }
 }
