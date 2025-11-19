@@ -12,12 +12,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/Valentayne/EPAM_CI-CD_Lab3.git'
-            }
-        }
-
         stage('Set ENV') {
             steps {
                 script {
