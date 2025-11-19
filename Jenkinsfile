@@ -5,7 +5,8 @@ pipeline {
         stage('Run Pipeline') {
             steps {
                 script {
-                    build job: 'CICD'
+                    sh 'chmod +x ./CICD'
+                    sh './CICD'
                 }
             }
         }
