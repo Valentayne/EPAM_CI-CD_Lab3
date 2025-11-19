@@ -1,9 +1,9 @@
 pipeline {
-
-    agent any
-
-    tools {
-        nodejs 'node'
+    agent {
+        docker {
+            image 'node:16'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
     }
 
     environment {
@@ -11,7 +11,6 @@ pipeline {
     }
 
     stages {
-
         stage('Set ENV') {
             steps {
                 script {
@@ -35,12 +34,12 @@ pipeline {
                 sh 'chmod +x ./scripts/test.sh'
                 sh './scripts/test.sh'
             }
-        }    
-        
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${env.IMAGE_NAME}:${IMAGE_TAG} ."
+                    docker.build("${env.IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
@@ -54,14 +53,12 @@ pipeline {
                     sh """
                         docker run -d \
                           --name ${env.CONTAINER_NAME} \
-                          --expose ${env.APP_PORT} \
                           -p ${env.APP_PORT}:${env.APP_PORT} \
                           --restart unless-stopped \
                           ${env.IMAGE_NAME}:${IMAGE_TAG}
                     """
 
                     sh "docker ps | grep ${env.CONTAINER_NAME}"
-                    sh "docker logs --tail=50 ${env.CONTAINER_NAME}"
                 }
             }
         }
