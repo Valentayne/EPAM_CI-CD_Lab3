@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Trigger CICD Job') {
             steps {
-                build job: 'CICD', propagate: true
+                build job: 'CI CD', propagate: true
             }
         }
     }
