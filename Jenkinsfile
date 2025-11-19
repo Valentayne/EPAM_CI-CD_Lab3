@@ -79,9 +79,6 @@ pipeline {
             echo "Image: ${env.IMAGE_NAME}:${IMAGE_TAG}"
             echo "Container: ${env.CONTAINER_NAME}"
         }
-        failure {
-            echo "Pipeline finished with error"
-        }
         always {
             sh "docker rm -f ${env.CONTAINER_NAME}-temp || true"
         }
