@@ -21,36 +21,19 @@ pipeline {
                 }
             }
         }
-        stage('Debug Repository') {
-            steps {
-                sh '''
-                    echo "=== Current Directory ==="
-                    pwd
-                    
-                    echo "=== Root Files ==="
-                    ls -la
-                    
-                    echo "=== Looking for scripts ==="
-                    find . -type f -name "*.sh"
-                    
-                    echo "=== Directory Tree ==="
-                    tree -L 3 || find . -maxdepth 3 -type d
-                '''
-            }
-        }
-        
+
         stage('Build Application') {
             steps {
-                sh 'chmod +x ./public/scripts/build.sh'
-                sh './public/scripts/build.sh'
+                sh 'chmod +x ./scripts/build.sh'
+                sh './scripts/build.sh'
                 sh 'npm run build'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'chmod +x ./public/scripts/test.sh'
-                sh './public/scripts/test.sh'
+                sh 'chmod +x ./scripts/test.sh'
+                sh './scripts/test.sh'
             }
         }    
         
