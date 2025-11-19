@@ -21,6 +21,23 @@ pipeline {
                 }
             }
         }
+        stage('Debug Repository') {
+            steps {
+                sh '''
+                    echo "=== Current Directory ==="
+                    pwd
+                    
+                    echo "=== Root Files ==="
+                    ls -la
+                    
+                    echo "=== Looking for scripts ==="
+                    find . -type f -name "*.sh"
+                    
+                    echo "=== Directory Tree ==="
+                    tree -L 3 || find . -maxdepth 3 -type d
+                '''
+            }
+        }
         
         stage('Build Application') {
             steps {
