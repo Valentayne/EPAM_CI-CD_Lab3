@@ -8,9 +8,10 @@ pipeline {
 
     environment {
         IMAGE_TAG = "v1.0"
-        APP_PORT = "${env.BRANCH_NAME == 'main' ? '3000' : '3001'}"
-        IMAGE_NAME = "${env.BRANCH_NAME == 'main' ? 'nodemain' : 'nodedev'}"
-        CONTAINER_NAME = "${env.BRANCH_NAME == 'main' ? 'nodemain-app' : 'nodedev-app'}"
+        ENV_SUFFIX = "${env.BRANCH_NAME == 'main' ? 'main' : 'dev'}"
+        APP_PORT = "${ENV_SUFFIX == 'main' ? '3000' : '3001'}"
+        IMAGE_NAME = "node${ENV_SUFFIX}"
+        CONTAINER_NAME = "node${ENV_SUFFIX}-app"
     }
 
     stages {
@@ -45,19 +46,19 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh "docker stop ${CONTAINER_NAME} || true"
-                sh "docker rm ${CONTAINER_NAME} || true"
-
                 sh """
-                    docker run -d \
-                      --name ${CONTAINER_NAME} \
-                      -p ${APP_PORT}:3000 \
-                      --restart unless-stopped \
-                      ${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                    docker stop ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME} || true
 
-                sh "docker ps | grep ${CONTAINER_NAME}"
-                sh "docker logs --tail=50 ${CONTAINER_NAME}"
+                    docker run -d \
+                        --name ${CONTAINER_NAME} \
+                        -p ${APP_PORT}:3000 \
+                        --restart unless-stopped \
+                        ${IMAGE_NAME}:${IMAGE_TAG}
+
+                    docker ps | grep ${CONTAINER_NAME}
+                    docker logs --tail=50 ${CONTAINER_NAME}
+                """
             }
         }
     }
