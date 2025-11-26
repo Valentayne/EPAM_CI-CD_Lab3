@@ -8,19 +8,12 @@ pipeline {
 
     environment {
         IMAGE_TAG = "v1.0"
+        APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
+        IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain' : 'nodedev'
+        CONTAINER_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain-app' : 'nodedev-app'
     }
 
     stages {
-
-        stage('Set ENV') {
-            steps {
-                script {
-                    env.APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
-                    env.IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain' : 'nodedev'
-                    env.CONTAINER_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain-app' : 'nodedev-app'
-                }
-            }
-        }
 
         stage('Verify Docker') {
             steps {
